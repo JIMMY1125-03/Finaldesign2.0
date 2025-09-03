@@ -16,7 +16,7 @@ data_dir = os.path.join(parent_dir, "ultralytics/cfg/datasets/A_DATA.yaml")
 # ---------------------------------- 训练超参数配置  ------------------------------------------------------
 # DATA_CONFIG_PATH = r'F:\Upppppdate\35-\yolo11-elec_device\ultralytics\cfg\datasets\A_my_data.yaml' # 数据集配置文件路径
 DATA_CONFIG_PATH = data_dir
-EPOCHS = 200# 模型训练的轮数
+EPOCHS = 100# 模型训练的轮数
 IMAGE_SIZE = 1080# 图像输入的大小
 DEVICE = [0]       # 设备配置
 WORKERS = 0       # 多线程配置
@@ -28,12 +28,12 @@ AMP = True       # 是否开启自动混合精度训练
 # ---------------------------------- 训练超参数配置  ------------------------------------------------------
 
 
-model = YOLO("yolo12s.yaml").load("yolo12s.pt")
-results = model.train(data=DATA_CONFIG_PATH, project="./runs/yolo12n_pretrained_6", epochs=EPOCHS,
-                      imgsz=IMAGE_SIZE, device=DEVICE, workers=WORKERS, batch=BATCH, cache=False, amp=AMP,
-                      conf=0.1,iou=0.7,max_det=1000
-                    )
-time.sleep(10)
+# model = YOLO("yolo12s.yaml").load("yolo12s.pt")
+# results = model.train(data=DATA_CONFIG_PATH, project="./runs/yolo12n_pretrained_6", epochs=EPOCHS,
+#                       imgsz=IMAGE_SIZE, device=DEVICE, workers=WORKERS, batch=BATCH, cache=False, amp=AMP,
+#                       conf=0.1,iou=0.7,max_det=1000
+#                     )
+# time.sleep(10)
 
 # model = YOLO("yolo12s.yaml").load("yolo12s.pt")# load a pretrained model (recommended for training)
 # results = model.train(data=DATA_CONFIG_PATH, project="./runs/yolo12s_pretrained", epochs=EPOCHS, imgsz=IMAGE_SIZE, device=DEVICE, workers=WORKERS, batch=BATCH, cache=CACHE, amp=AMP)  # CPU 开始训练
@@ -82,9 +82,9 @@ time.sleep(10)
 # time.sleep(10) # 睡眠10s，主要是用于服务器多次训练的过程中使用
 
 # 分割
-# model = YOLO("yolo12n-seg.yaml")
-# results = model.train(data=os.path.join(parent_dir, "ultralytics/cfg/datasets/coco128-seg.yaml"), project="./runs/yolo12n_pretrained", epochs=EPOCHS, imgsz=IMAGE_SIZE, device=DEVICE, workers=WORKERS, batch=BATCH, cache=CACHE, amp=AMP)  # CPU 开始训练
-# time.sleep(10) # 睡眠10s，主要是用于服务器多次训练的过程中使用
+model = YOLO("yolo12n-seg.yaml").load("yolo12n.pt")
+results = model.train(data=os.path.join(parent_dir, "ultralytics/cfg/datasets/coco128-seg.yaml"), project="./runs/yolo12n_pretrained", epochs=EPOCHS, imgsz=IMAGE_SIZE, device=DEVICE, workers=WORKERS, batch=BATCH, cache=CACHE, amp=AMP)  # CPU 开始训练
+time.sleep(10) # 睡眠10s，主要是用于服务器多次训练的过程中使用
 
 
 # 关键点检测
