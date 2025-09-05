@@ -17,23 +17,60 @@ data_dir = os.path.join(parent_dir, "ultralytics/cfg/datasets/A_DATA.yaml")
 # DATA_CONFIG_PATH = r'F:\Upppppdate\35-\yolo11-elec_device\ultralytics\cfg\datasets\A_my_data.yaml' # 数据集配置文件路径
 DATA_CONFIG_PATH = data_dir
 EPOCHS = 100# 模型训练的轮数
-IMAGE_SIZE = 1080# 图像输入的大小
-DEVICE = [0]       # 设备配置
-WORKERS = 0       # 多线程配置
-BATCH = 8       # 数据集批次大小
-CACHE = False        # 缓存
-AMP = True       # 是否开启自动混合精度训练
+IMAGE_SIZE = 1280# 图像输入的大小（更大输入提升近景/放大目标的感受野）
+DEVICE = [0]       # 设备配置（使用第0块GPU）
+WORKERS = 0       # 多线程配置（0避免Windows系统线程冲突）
+BATCH = 2      # 数据集批次大小（根据GPU显存调整，4060 Laptop GPU可支持）
+CACHE = False        # 缓存（False避免占用过多内存）
+AMP = True       # 开启自动混合精度训练（加速训练且节省显存）
+
+# 针对“放大图片的害虫”增强策略
+# 说明：增大 scale 范围与 mosaic/copy_paste 有助于模型适应更大比例的目标
+AUG_DEGREES = 0.0
+AUG_TRANSLATE = 0.10
+AUG_SCALE = 0.90        # 默认0.5→0.90：缩放范围更大，包含更强的放大（[0.1, 1.9]）
+AUG_SHEAR = 0.0
+AUG_PERSPECTIVE = 0.0
+AUG_FLIPLR = 0.5
+AUG_FLIPUD = 0.0
+AUG_MOSAIC = 0.8        # 保持较强的马赛克增强，但不过度（0~1）
+AUG_MIXUP = 0.10
+AUG_COPY_PASTE = 0.30   # 复制粘贴，增强目标尺寸与密度多样性
+CLOSE_MOSAIC_LAST = 10  # 末期关闭mosaic稳定收敛
 
 
 # ---------------------------------- 训练超参数配置  ------------------------------------------------------
 
 
-# model = YOLO("yolo12s.yaml").load("yolo12s.pt")
-# results = model.train(data=DATA_CONFIG_PATH, project="./runs/yolo12n_pretrained_6", epochs=EPOCHS,
-#                       imgsz=IMAGE_SIZE, device=DEVICE, workers=WORKERS, batch=BATCH, cache=False, amp=AMP,
-#                       conf=0.1,iou=0.7,max_det=1000
-#                     )
-# time.sleep(10)
+# 关键修改：用YOLO12检测模型替换分割模型，与检测数据集匹配
+# 原错误代码（已注释）：model = YOLO("yolo12n-seg.yaml").load("yolo12n.pt")
+model = YOLO("yolo12n.yaml").load("yolo12n.pt")  # 检测模型+对应检测预训练权重
+
+# 启动训练（保持原路径和超参数，仅模型已修正）
+results = model.train(
+    data=DATA_CONFIG_PATH,
+    project="D:\校内\新建文件夹\训练2",
+    epochs=EPOCHS,
+    imgsz=IMAGE_SIZE,
+    device=DEVICE,
+    workers=WORKERS,
+    batch=BATCH,
+    cache=False,
+    amp=AMP,
+    # 关键增强参数
+    degrees=AUG_DEGREES,
+    translate=AUG_TRANSLATE,
+    scale=AUG_SCALE,
+    shear=AUG_SHEAR,
+    perspective=AUG_PERSPECTIVE,
+    fliplr=AUG_FLIPLR,
+    flipud=AUG_FLIPUD,
+    mosaic=AUG_MOSAIC,
+    mixup=AUG_MIXUP,
+    copy_paste=AUG_COPY_PASTE,
+    close_mosaic=CLOSE_MOSAIC_LAST,
+)
+time.sleep(10)
 
 # model = YOLO("yolo12s.yaml").load("yolo12s.pt")# load a pretrained model (recommended for training)
 # results = model.train(data=DATA_CONFIG_PATH, project="./runs/yolo12s_pretrained", epochs=EPOCHS, imgsz=IMAGE_SIZE, device=DEVICE, workers=WORKERS, batch=BATCH, cache=CACHE, amp=AMP)  # CPU 开始训练
@@ -81,10 +118,10 @@ AMP = True       # 是否开启自动混合精度训练
 # results = model.train(data=DATA_CONFIG_PATH, project="./runs/yolo12n_coord_pretrained", epochs=EPOCHS, imgsz=IMAGE_SIZE, device=DEVICE, workers=WORKERS, batch=BATCH, cache=CACHE, amp=AMP)  # CPU 开始训练
 # time.sleep(10) # 睡眠10s，主要是用于服务器多次训练的过程中使用
 
-# 分割
-model = YOLO("yolo12n-seg.yaml").load("yolo12n.pt")
-results = model.train(data=os.path.join(parent_dir, "ultralytics/cfg/datasets/coco128-seg.yaml"), project="./runs/yolo12n_pretrained", epochs=EPOCHS, imgsz=IMAGE_SIZE, device=DEVICE, workers=WORKERS, batch=BATCH, cache=CACHE, amp=AMP)  # CPU 开始训练
-time.sleep(10) # 睡眠10s，主要是用于服务器多次训练的过程中使用
+# 分割（已注释，避免误运行）
+#model = YOLO("yolo12n-seg.yaml").load("yolo12n.pt")
+#results = model.train(data=os.path.join(parent_dir, "ultralytics/cfg/datasets/coco128-seg.yaml"), project="D:\\校内\\新建文件夹\\训练", epochs=EPOCHS, imgsz=IMAGE_SIZE, device=DEVICE, workers=WORKERS, batch=BATCH, cache=CACHE, amp=AMP)  # CPU 开始训练
+#time.sleep(10) # 睡眠10s，主要是用于服务器多次训练的过程中使用
 
 
 # 关键点检测

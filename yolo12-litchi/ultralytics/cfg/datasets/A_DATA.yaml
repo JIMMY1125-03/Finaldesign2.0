@@ -1,8 +1,11 @@
 # Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
-path: D:\JM\毕业设计\原数据\一开二拍照 # dataset root dir
-train: D:\JM\毕业设计\已标注数据\bug1\train # train images (relative to 'path') 1052 images
-val: D:\JM\毕业设计\已标注数据\bug1\valid # val images (relative to 'path') 225 images
-test: D:\JM\毕业设计\已标注数据\bug1\test # test images (relative to 'path') 227 images
+path: D:\校内\图片数据  # 数据集根目录
+train: train/images     # 训练集图片路径
+val: valid/images       # 验证集图片路径（已扫描到11张）
+segments_train: train/labels  # 训练集分割掩码标注路径（关键！）
+segments_val: valid/labels    # 验证集分割掩码标注路径（关键！）
+nc: 5                   # 日志中显示你有5个类别，需与标注的class_id对应
+test: D:\校内\图片数据\test # test images (relative to 'path') 227 images
 
 # Classes
 names: ['麻蝇', '蛾类', '黑斑果蝇', '粪蝇', '蚤蝇']

@@ -141,8 +141,10 @@ class MainWindow(QTabWidget):
         self.output_size = 480  # 上传的图像和视频在系统界面上显示的大小
         self.img2predict = ""  # 要进行预测的图像路径
         # 用来进行设置的参数
-        self.conf_thres = 0.25  # 置信度的阈值
-        self.iou_thres = 0.45  # NMS操作的时候 IOU过滤的阈值
+        self.conf_thres = 0.2  # 置信度的阈值
+        self.iou_thres = 0.5  # NMS操作的时候 IOU过滤的阈值
+        self.imgsz = 1280  # 推理图像尺寸（较大尺寸有助于识别放大目标）
+        self.use_tta = False  # 是否启用测试时增强（TTA）
         self.save_txt = False
         self.save_conf = False
         self.save_crop = False
@@ -153,7 +155,7 @@ class MainWindow(QTabWidget):
         self.latest_detection_results = {}
 
         # self.model_path = "runs/detect/yolo11-n/weights/best.pt"  # todo 指明模型加载的位置的设备
-        self.model_path = r"D:\JM\毕业设计\农业害虫检测系统\基于yolov11的农业害虫检测系统\yolo12-litchi\42_demo\runs\yolo12n_pretrained_6\train\weights\best.pt"  # todo 指明模型加载的位置的设备
+        self.model_path = r"D:\校内\新建文件夹\Finaldesign2.0\yolo12-litchi\42_demo\runs\best.pt"  # todo 指明模型加载的位置的设备
         self.model = self.model_load(weights=self.model_path)
 
         # 设置现代化样式
@@ -544,48 +546,7 @@ class MainWindow(QTabWidget):
         config_grid_widget = QWidget()
         config_grid_layout = QGridLayout()
 
-        # self.output_size = 480  # 上传的图像和视频在系统界面上显示的大小
-        config_output_size_label = QLabel("🖼️ 系统图像显示大小")
-        config_output_size_label.setStyleSheet("color: black;")
-        self.config_output_size_value = QLineEdit("")
-        self.config_output_size_value.setText(str(self.output_size))
-        self.config_output_size_value.setStyleSheet("""
-            QLineEdit {
-                background: white;
-                border: 2px solid #E9ECEF;
-                border-radius: 6px;
-                padding: 8px;
-                font-size: 12px;
-                color: black;
-            }
-            QLineEdit:focus {
-                border: 2px solid #007BFF;
-                background: #F8F9FF;
-            }
-        """)
-        config_grid_layout.addWidget(config_output_size_label, 0, 0)
-        config_grid_layout.addWidget(self.config_output_size_value, 0, 1)
-
-        # self.vid_source = int(self.init_vid_id)  # 需要设置为对应的整数，加载的才是usb的摄像头
-        # self.conf_thres = 0.25  # 置信度的阈值
-        config_conf_thres_label = QLabel("🎯 检测模型置信度阈值")
-        config_conf_thres_label.setStyleSheet("color: black;")
-        self.config_conf_thres_value = QLineEdit("")
-        self.config_conf_thres_value.setText(str(self.conf_thres))
-        self.config_conf_thres_value.setStyleSheet(self.config_output_size_value.styleSheet())
-        config_grid_layout.addWidget(config_conf_thres_label)
-        config_grid_layout.addWidget(self.config_conf_thres_value)
-
-        # self.iou_thres = 0.45  # NMS操作的时候 IOU过滤的阈值
-        config_iou_thres_label = QLabel("📏 检测模型IOU阈值")
-        config_iou_thres_label.setStyleSheet("color: black;")
-        self.config_iou_thres_value = QLineEdit("")
-        self.config_iou_thres_value.setText(str(self.iou_thres))
-        self.config_iou_thres_value.setStyleSheet(self.config_output_size_value.styleSheet())
-        config_grid_layout.addWidget(config_iou_thres_label)
-        config_grid_layout.addWidget(self.config_iou_thres_value)
-
-        # self.save_txt = False
+        # 1. 先定义 config_save_txt_value（后续要被其他组件复制样式）
         config_save_txt_label = QLabel("📄 推理时是否保存txt文件")
         config_save_txt_label.setStyleSheet("color: black;")
         self.config_save_txt_value = QRadioButton("True")
@@ -607,32 +568,96 @@ class MainWindow(QTabWidget):
                 background: #007BFF;
             }
         """)
-        config_grid_layout.addWidget(config_save_txt_label)
-        config_grid_layout.addWidget(self.config_save_txt_value)
+        config_grid_layout.addWidget(config_save_txt_label, 0, 0)  # 注意：调整网格布局的行号（避免重叠）
+        config_grid_layout.addWidget(self.config_save_txt_value, 0, 1)
 
-        # self.save_conf = False
+        # 2. 再定义 config_tta_value（此时可以安全复制 config_save_txt_value 的样式）
+        config_tta_label = QLabel("🧪 启用测试时增强(TTA)")
+        config_tta_label.setStyleSheet("color: black;")
+        self.config_tta_value = QRadioButton("True")
+        self.config_tta_value.setChecked(self.use_tta)
+        self.config_tta_value.setAutoExclusive(False)
+        # 现在 self.config_save_txt_value 已存在，可以正常复制样式
+        self.config_tta_value.setStyleSheet(self.config_save_txt_value.styleSheet())
+        config_grid_layout.addWidget(config_tta_label, 1, 0)  # 行号+1，避免与上一个组件重叠
+        config_grid_layout.addWidget(self.config_tta_value, 1, 1)
+
+        # 3. 其他原有组件（按原顺序保留，注意调整网格行号避免重叠）
+        # 系统图像显示大小
+        config_output_size_label = QLabel("🖼️ 系统图像显示大小")
+        config_output_size_label.setStyleSheet("color: black;")
+        self.config_output_size_value = QLineEdit("")
+        self.config_output_size_value.setText(str(self.output_size))
+        self.config_output_size_value.setStyleSheet("""
+            QLineEdit {
+                background: white;
+                border: 2px solid #E9ECEF;
+                border-radius: 6px;
+                padding: 8px;
+                font-size: 12px;
+                color: black;
+            }
+            QLineEdit:focus {
+                border: 2px solid #007BFF;
+                background: #F8F9FF;
+            }
+        """)
+        config_grid_layout.addWidget(config_output_size_label, 2, 0)  # 行号继续递增
+        config_grid_layout.addWidget(self.config_output_size_value, 2, 1)
+
+        # 推理图像尺寸
+        config_imgsz_label = QLabel("🧩 推理图像尺寸(imgsz)")
+        config_imgsz_label.setStyleSheet("color: black;")
+        self.config_imgsz_value = QLineEdit("")
+        self.config_imgsz_value.setText(str(self.imgsz))
+        self.config_imgsz_value.setStyleSheet(self.config_output_size_value.styleSheet())
+        config_grid_layout.addWidget(config_imgsz_label, 3, 0)
+        config_grid_layout.addWidget(self.config_imgsz_value, 3, 1)
+
+        # 检测模型置信度阈值
+        config_conf_thres_label = QLabel("🎯 检测模型置信度阈值")
+        config_conf_thres_label.setStyleSheet("color: black;")
+        self.config_conf_thres_value = QLineEdit("")
+        self.config_conf_thres_value.setText(str(self.conf_thres))
+        self.config_conf_thres_value.setStyleSheet(self.config_output_size_value.styleSheet())
+        config_grid_layout.addWidget(config_conf_thres_label, 4, 0)
+        config_grid_layout.addWidget(self.config_conf_thres_value, 4, 1)
+
+        # 检测模型IOU阈值
+        config_iou_thres_label = QLabel("📏 检测模型IOU阈值")
+        config_iou_thres_label.setStyleSheet("color: black;")
+        self.config_iou_thres_value = QLineEdit("")
+        self.config_iou_thres_value.setText(str(self.iou_thres))
+        self.config_iou_thres_value.setStyleSheet(self.config_output_size_value.styleSheet())
+        config_grid_layout.addWidget(config_iou_thres_label, 5, 0)
+        config_grid_layout.addWidget(self.config_iou_thres_value, 5, 1)
+
+        # 推理时是否保存置信度（原有组件，行号继续递增）
         config_save_conf_label = QLabel("📊 推理时是否保存置信度")
         config_save_conf_label.setStyleSheet("color: black;")
         self.config_save_conf_value = QRadioButton("True")
         self.config_save_conf_value.setChecked(False)
         self.config_save_conf_value.setAutoExclusive(False)
         self.config_save_conf_value.setStyleSheet(self.config_save_txt_value.styleSheet())
-        config_grid_layout.addWidget(config_save_conf_label)
-        config_grid_layout.addWidget(self.config_save_conf_value)
-        # self.save_crop = False
+        config_grid_layout.addWidget(config_save_conf_label, 6, 0)
+        config_grid_layout.addWidget(self.config_save_conf_value, 6, 1)
+
+        # 推理时是否保存切片文件（原有组件）
         config_save_crop_label = QLabel("✂️ 推理时是否保存切片文件")
         config_save_crop_label.setStyleSheet("color: black;")
         self.config_save_crop_value = QRadioButton("True")
         self.config_save_crop_value.setChecked(False)
         self.config_save_crop_value.setAutoExclusive(False)
         self.config_save_crop_value.setStyleSheet(self.config_save_txt_value.styleSheet())
-        config_grid_layout.addWidget(config_save_crop_label)
-        config_grid_layout.addWidget(self.config_save_crop_value)
+        config_grid_layout.addWidget(config_save_crop_label, 7, 0)
+        config_grid_layout.addWidget(self.config_save_crop_value, 7, 1)
 
+        # 后续原有代码（无需修改）
         config_grid_widget.setLayout(config_grid_layout)
         config_grid_widget.setFont(font_main)
 
         save_config_button = QPushButton("保存配置信息")
+        # ... （保存按钮及其他布局代码保持不变）
         save_config_button.setFont(font_main)
         save_config_button.clicked.connect(self.save_config_change)
         save_config_button.setStyleSheet(modern_button_style)
@@ -772,6 +797,8 @@ class MainWindow(QTabWidget):
                 self.img2predict,
                 conf=self.conf_thres,
                 iou=self.iou_thres,
+                imgsz=self.imgsz,
+                augment=self.use_tta,
                 save_txt=self.save_txt,
                 save_conf=self.save_conf,
                 save_crop=self.save_crop,
@@ -791,6 +818,8 @@ class MainWindow(QTabWidget):
                         self.img2predict,
                         conf=self.conf_thres,
                         iou=self.iou_thres,
+                        imgsz=self.imgsz,
+                        augment=self.use_tta,
                         save_txt=self.save_txt,
                         save_conf=self.save_conf,
                         save_crop=self.save_crop,
@@ -947,12 +976,14 @@ class MainWindow(QTabWidget):
         print("保存配置修改的结果")
         try:
             self.output_size = int(self.config_output_size_value.text())
+            self.imgsz = int(self.config_imgsz_value.text())
             self.conf_thres = float(self.config_conf_thres_value.text())
             self.iou_thres = float(self.config_iou_thres_value.text())
             ###
             self.save_txt = self.config_save_txt_value.isChecked()
             self.save_conf = self.config_save_conf_value.isChecked()
             self.save_crop = self.config_save_crop_value.isChecked()
+            self.use_tta = self.config_tta_value.isChecked()
 
             self.show_message(QMessageBox.Information, "配置文件保存成功", "配置文件保存成功")
         except:
