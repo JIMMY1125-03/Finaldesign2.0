@@ -537,7 +537,7 @@ class AnimationManager:
 
 # 常用的字符串常量
 WINDOW_TITLE = "农业害虫检测系统"  # 系统上方标题
-WELCOME_SENTENCE = "欢迎使用基于yolov11的农业害虫检测系统"  # 欢迎的句子
+WELCOME_SENTENCE = "欢迎使用基于yolov12的农业害虫检测系统"  # 欢迎的句子
 ICON_IMAGE = "images/UI/lufei.png"  # 系统logo界面
 IMAGE_LEFT_INIT = "images/UI/up.jpeg"  # 图片检测界面初始化左侧图像
 IMAGE_RIGHT_INIT = "images/UI/right.jpeg"  # 图片检测界面初始化右侧图像
@@ -858,7 +858,7 @@ class MainWindow(QTabWidget):
         font_title = QFont('Microsoft YaHei UI', 16, QFont.Bold)
         font_main = QFont('Microsoft YaHei UI', 12)
         img_detection_widget = QWidget()
-        
+
         # 使用QSplitter创建可调整大小的分割器
         main_splitter = QSplitter(Qt.Horizontal)
         main_splitter.setHandleWidth(10)  # 设置分割条宽度
